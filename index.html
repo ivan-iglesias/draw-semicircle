@@ -2,96 +2,48 @@
 <html>
 <head>
 	<title>Draw Semicircle</title>
-
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="resources/leaflet.css"/>
     <script src="resources/leaflet.js"></script>
-    <script src="data.js"></script>
+    <script src="semicircle.js"></script>
 
     <style>
-        html {
-            font-size: 16px;
+        h1 {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            color: #3b5998;
-            background: #f7f7f7;
-        }
-
-        html,
-        body {
-            height: 100%;
-            width: 100%;
+            font-size: 24px;
+            font-weight: 600;
+            color: #333333;
         }
     </style>
 </head>
 <body>
-    <div style="margin: 1em;">
-        <label for="numberOfPoints">Number of section points</label>
-        <input id="numberOfPoints" type="number" value="2" min="1" max="100">
-        <a href="#" onclick="reload()">
-            RELOAD
-        </a>
+    <div>
+        <h1>DRAW SEMICIRCLE</h1>
+        <div id="map" style="min-height: 75vh;"></div>
     </div>
-
-    <div id="map" style="width: 100%; height: 800px;"></div>
 
     <script>
         // Map
-        const map = L.map('map').setView([43.2639, -2.9394582], 16);
-
+        const map = L.map('map').setView([43.2639, -2.9394582], 15);
         L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
+            maxZoom: 18,
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         }).addTo(map);
 
-        // Get polygon coordinates to paint a secction
-        const DEG_TO_RAD = Math.PI / 180;
+        // Sectors
+        const sectors = {
+            S1: getPoints(lat=43.2639, lng=-2.9394582, azimuth=45, bw=60),
+            S2: getPoints(lat=43.2639, lng=-2.9394582, azimuth=120, bw=45),
+            S3: getPoints(lat=43.2639, lng=-2.9394582, azimuth=220, bw=60),
+            S4: getPoints(lat=43.2639, lng=-2.9394582, azimuth=320, bw=30),
+        };
 
-        function getSectorPoints(latitude, longitude, azimuth, bw, numberOfPoints) {
-            const radiusKm = 0.05;
-            const startAngle = (azimuth - bw / 2) * DEG_TO_RAD;
-            const stopAngle = (azimuth + bw / 2)* DEG_TO_RAD;
-            const radiusLat = 1 / 110.574 * radiusKm;
-            const radiusLon = 1 / (111.319 * Math.cos(latitude * DEG_TO_RAD)) * radiusKm;
-
-            const angleIncremental = (stopAngle - startAngle) / numberOfPoints;
-            let angle = startAngle;
-            let points = [[latitude, longitude]];
-
-            for (let i = 0; i <= numberOfPoints; i++) {
-                points.push([
-                    latitude + radiusLat * Math.sin(angle),
-                    longitude + radiusLon * Math.cos(angle)
-                ]);
-
-                angle += angleIncremental;
-            }
-
-            return points;
+        for (const key in sectors) {
+            L.polygon(sectors[key], { weight: 1, color: 'blue' })
+                .bindPopup(`<strong>SECTOR ${key}</strong>`)
+                .addTo(map)
         }
-
-        // Paint test data
-        const GREEN = '#3ADF00';
-        const RED = '#FE2E2E';
-        let sectors = [];
-
-        function paintTestData() {
-            const numberOfPoints = document.getElementById("numberOfPoints").value;
-
-            sectors.forEach(sector => sector.remove());
-
-            window.data.forEach(cell => {
-                let points = getSectorPoints(cell.lat, cell.lng, cell.azimuth, cell.bw, numberOfPoints);
-                let color = Math.floor(Math.random() * 20) >= 4 ? GREEN : RED;
-                sectors.push(L.polygon(points, { weight: 1, color: 'black', fillColor: color, fillOpacity: 1 }).addTo(map));
-            });
-        }
-
-        function reload() {
-            paintTestData();
-        }
-
-        paintTestData();
     </script>
 </body>
 </html>
